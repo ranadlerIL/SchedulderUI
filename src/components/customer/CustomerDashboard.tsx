@@ -64,10 +64,10 @@ const CustomerDashboard: React.FC = () => {
         <div className="container">
           <nav className="nav">
             <h1>לוח בקרה - לקוח</h1>
-            <ul className="nav-links">
-              <li><a href="/">חזרה לדף הבית</a></li>
-              <li><button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}>התנתק</button></li>
-            </ul>
+                         <ul className="nav-links">
+               <li><a href="/">חזרה לדף הבית</a></li>
+               <li><button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', textAlign: 'center' }}>התנתק</button></li>
+             </ul>
           </nav>
         </div>
       </header>
@@ -78,12 +78,12 @@ const CustomerDashboard: React.FC = () => {
           <p>מספר טלפון: {customerPhone}</p>
         </div>
 
-        {/* Approved Appointments */}
-        <div className="card">
-          <h3>תורים מאושרים</h3>
-          {approvedAppointments.length === 0 ? (
-            <p>אין תורים מאושרים</p>
-          ) : (
+                 {/* Approved Appointments */}
+         <div className="card">
+           <h3 style={{ marginBottom: '20px' }}>תורים מאושרים</h3>
+           {approvedAppointments.length === 0 ? (
+             <p>אין תורים מאושרים</p>
+           ) : (
             <div className="appointment-list">
               {approvedAppointments.map((appointment) => (
                 <div key={appointment.id} className="appointment-item">
@@ -110,12 +110,12 @@ const CustomerDashboard: React.FC = () => {
           )}
         </div>
 
-        {/* Pending Appointments */}
-        <div className="card">
-          <h3>תורים ממתינים לאישור</h3>
-          {pendingAppointments.length === 0 ? (
-            <p>אין תורים ממתינים לאישור</p>
-          ) : (
+                 {/* Pending Appointments */}
+         <div className="card">
+           <h3 style={{ marginBottom: '20px' }}>תורים ממתינים לאישור</h3>
+           {pendingAppointments.length === 0 ? (
+             <p>אין תורים ממתינים לאישור</p>
+           ) : (
             <div className="appointment-list">
               {pendingAppointments.map((appointment) => (
                 <div key={appointment.id} className="appointment-item">
@@ -142,16 +142,7 @@ const CustomerDashboard: React.FC = () => {
           )}
         </div>
 
-        <div className="card">
-          <h3>פעולות נוספות</h3>
-          <button 
-            className="btn btn-primary" 
-            onClick={() => navigate('/')}
-            style={{ marginRight: '12px' }}
-          >
-            הזמן תור חדש
-          </button>
-        </div>
+
       </div>
     </div>
   );

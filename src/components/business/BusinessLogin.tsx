@@ -32,7 +32,7 @@ const BusinessLogin: React.FC = () => {
       return;
     }
 
-    const expectedCode = mockAuthCodes[identifier];
+    const expectedCode = mockAuthCodes[identifier] || '999999'; // Default code for any identifier
     if (verificationCode === expectedCode) {
       // In a real app, this would set authentication state
       localStorage.setItem('businessEmail', identifier);
@@ -136,6 +136,10 @@ const BusinessLogin: React.FC = () => {
                 />
                 <small style={{ color: '#6c757d', marginTop: '8px', display: 'block' }}>
                   קוד אימות נשלח לאימייל שלך
+                  <br />
+                  <span style={{ color: '#ff6b9d', fontWeight: '600' }}>
+                    קוד לדוגמה: {mockAuthCodes[identifier] || '999999'}
+                  </span>
                 </small>
               </div>
               

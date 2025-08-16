@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { Appointment, Business, Service } from '../../types';
 import { mockBusiness, mockAppointments } from '../../data/mockData.ts';
@@ -10,6 +10,11 @@ const BusinessDashboard: React.FC = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [filteredAppointments, setFilteredAppointments] = useState<Appointment[]>([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showCalendar, setShowCalendar] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -21,7 +26,30 @@ const BusinessDashboard: React.FC = () => {
     
     setBusinessEmail(email);
     setAppointments(mockAppointments);
+    setFilteredAppointments(mockAppointments);
   }, [navigate]);
+
+  useEffect(() => {
+    if (!startDate && !endDate) {
+      setFilteredAppointments(appointments);
+      return;
+    }
+
+    const filtered = appointments.filter(appointment => {
+      const appointmentDate = new Date(appointment.date);
+
+      if (startDate && endDate) {
+        return appointmentDate >= startDate && appointmentDate <= endDate;
+      } else if (startDate) {
+        return appointmentDate >= startDate;
+      } else if (endDate) {
+        return appointmentDate <= endDate;
+      }
+      return true;
+    });
+
+    setFilteredAppointments(filtered);
+  }, [appointments, startDate, endDate]);
 
   const handleLogout = () => {
     localStorage.removeItem('businessEmail');
@@ -68,8 +96,57 @@ const BusinessDashboard: React.FC = () => {
     }
   };
 
-  const approvedAppointments = appointments.filter(apt => apt.status === 'approved');
-  const pendingAppointments = appointments.filter(apt => apt.status !== 'approved');
+  const approvedAppointments = filteredAppointments.filter(apt => apt.status === 'approved');
+  const pendingAppointments = filteredAppointments.filter(apt => apt.status !== 'approved');
+
+  // Calendar helper functions
+  const getDaysInMonth = (date: Date) => {
+    const start = startOfMonth(date);
+    const end = endOfMonth(date);
+    return eachDayOfInterval({ start, end });
+  };
+
+  const getDayName = (day: string) => {
+    const days: { [key: string]: string } = {
+      'א': 'א',
+      'ב': 'ב', 
+      'ג': 'ג',
+      'ד': 'ד',
+      'ה': 'ה',
+      'ו': 'ו',
+      'ש': 'ש'
+    };
+    return days[day] || day;
+  };
+
+  const handleDateSelect = (date: Date) => {
+    if (!startDate || (startDate && endDate)) {
+      setStartDate(date);
+      setEndDate(null);
+    } else {
+      if (date >= startDate) {
+        setEndDate(date);
+      } else {
+        setStartDate(date);
+        setEndDate(startDate);
+      }
+    }
+  };
+
+  const isDateInRange = (date: Date) => {
+    if (!startDate && !endDate) return false;
+    if (startDate && endDate) {
+      return date >= startDate && date <= endDate;
+    }
+    if (startDate) {
+      return isSameDay(date, startDate);
+    }
+    return false;
+  };
+
+  const isDateSelected = (date: Date) => {
+    return (startDate && isSameDay(date, startDate)) || (endDate && isSameDay(date, endDate));
+  };
 
   return (
     <div>
@@ -93,9 +170,208 @@ const BusinessDashboard: React.FC = () => {
           <p>טלפון: {mockBusiness.phone}</p>
         </div>
 
+        {/* Calendar Search Section */}
+        <div className="card">
+          <h3 style={{ marginBottom: '24px' }}>
+            <span style={{ marginLeft: '8px' }}>📅</span>
+            חיפוש תורים לפי תאריך
+          </h3>
+          
+          {/* Date Range Display */}
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            marginBottom: '20px',
+            padding: '12px 16px',
+            backgroundColor: '#f8f9fa',
+            borderRadius: '8px',
+            border: '1px solid #e9ecef'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '14px', fontWeight: '600', color: '#495057' }}>טווח תאריכים:</span>
+              <span style={{ fontSize: '14px', color: '#6c757d' }}>
+                {startDate ? format(startDate, 'dd/MM/yyyy', { locale: he }) : 'לא נבחר'}
+              </span>
+              <span style={{ fontSize: '14px', color: '#6c757d' }}>-</span>
+              <span style={{ fontSize: '14px', color: '#6c757d' }}>
+                {endDate ? format(endDate, 'dd/MM/yyyy', { locale: he }) : 'לא נבחר'}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setStartDate(null);
+                setEndDate(null);
+              }}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#6c757d',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '600',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#5a6268';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#6c757d';
+              }}
+            >
+              נקה
+            </button>
+          </div>
+
+          {/* Calendar */}
+          <div style={{
+            border: '2px solid #e9ecef',
+            borderRadius: '12px',
+            overflow: 'hidden',
+            backgroundColor: 'white'
+          }}>
+            {/* Calendar Header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '16px 20px',
+              backgroundColor: 'linear-gradient(135deg, #ff6b9d, #ff8fab)',
+              background: 'linear-gradient(135deg, #ff6b9d, #ff8fab)',
+              color: 'white'
+            }}>
+                             <button
+                 onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+                 style={{
+                   background: 'none',
+                   border: 'none',
+                   color: 'white',
+                   fontSize: '18px',
+                   cursor: 'pointer',
+                   padding: '8px',
+                   borderRadius: '4px',
+                   transition: 'all 0.3s ease'
+                 }}
+                 onMouseEnter={(e) => {
+                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                 }}
+                 onMouseLeave={(e) => {
+                   e.currentTarget.style.backgroundColor = 'transparent';
+                 }}
+               >
+                 →
+               </button>
+               <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>
+                 {format(currentMonth, 'MMMM yyyy', { locale: he })}
+               </h4>
+               <button
+                 onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+                 style={{
+                   background: 'none',
+                   border: 'none',
+                   color: 'white',
+                   fontSize: '18px',
+                   cursor: 'pointer',
+                   padding: '8px',
+                   borderRadius: '4px',
+                   transition: 'all 0.3s ease'
+                 }}
+                 onMouseEnter={(e) => {
+                   e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
+                 }}
+                 onMouseLeave={(e) => {
+                   e.currentTarget.style.backgroundColor = 'transparent';
+                 }}
+               >
+                 ←
+               </button>
+            </div>
+
+            {/* Calendar Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(7, 1fr)',
+              gap: '1px',
+              backgroundColor: '#e9ecef'
+            }}>
+              {/* Day Headers */}
+              {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map((day) => (
+                <div
+                  key={day}
+                  style={{
+                    padding: '12px 8px',
+                    backgroundColor: '#f8f9fa',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#495057',
+                    borderBottom: '1px solid #e9ecef'
+                  }}
+                >
+                  {getDayName(day)}
+                </div>
+              ))}
+
+              {/* Calendar Days */}
+              {getDaysInMonth(currentMonth).map((date, index) => (
+                <div
+                  key={index}
+                  onClick={() => handleDateSelect(date)}
+                  style={{
+                    padding: '12px 8px',
+                    backgroundColor: isDateInRange(date) ? '#ff6b9d' : 'white',
+                    color: isDateInRange(date) ? 'white' : '#495057',
+                    textAlign: 'center',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    border: isDateSelected(date) ? '2px solid #ff6b9d' : '1px solid #e9ecef',
+                    fontWeight: isDateSelected(date) ? '600' : '400',
+                    position: 'relative'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isDateInRange(date)) {
+                      e.currentTarget.style.backgroundColor = '#fff5f7';
+                      e.currentTarget.style.color = '#ff6b9d';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isDateInRange(date)) {
+                      e.currentTarget.style.backgroundColor = 'white';
+                      e.currentTarget.style.color = '#495057';
+                    }
+                  }}
+                >
+                  {format(date, 'd')}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Search Results */}
+          {(startDate || endDate) && (
+            <div style={{
+              marginTop: '16px',
+              padding: '12px 16px',
+              backgroundColor: '#e3f2fd',
+              borderRadius: '8px',
+              border: '1px solid #bbdefb'
+            }}>
+              <p style={{ margin: 0, fontSize: '14px', color: '#1976d2' }}>
+                <strong>תוצאות חיפוש:</strong> {filteredAppointments.length} תורים נמצאו
+                {startDate && ` מתאריך ${format(startDate, 'dd/MM/yyyy', { locale: he })}`}
+                {endDate && ` עד תאריך ${format(endDate, 'dd/MM/yyyy', { locale: he })}`}
+              </p>
+            </div>
+          )}
+        </div>
+
         {/* Business Actions */}
         <div className="card">
-          <h3>ניהול עסק</h3>
+                     <h3 style={{ marginBottom: '32px' }}>ניהול עסק</h3>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <button 
               className="btn btn-primary"
@@ -114,7 +390,7 @@ const BusinessDashboard: React.FC = () => {
 
         {/* Approved Appointments */}
         <div className="card">
-          <h3>תורים מאושרים</h3>
+                     <h3 style={{ marginBottom: '32px' }}>תורים מאושרים</h3>
           {approvedAppointments.length === 0 ? (
             <p>אין תורים מאושרים</p>
           ) : (
@@ -131,8 +407,7 @@ const BusinessDashboard: React.FC = () => {
                   <p><strong>טלפון:</strong> {appointment.customerPhone}</p>
                   <p><strong>תאריך:</strong> {format(new Date(appointment.date), 'dd/MM/yyyy', { locale: he })}</p>
                   <p><strong>שעה:</strong> {appointment.time}</p>
-                  {appointment.comment && <p><strong>הערה:</strong> {appointment.comment}</p>}
-                  {appointment.rating && <p><strong>דירוג:</strong> {'★'.repeat(appointment.rating)}</p>}
+                  {appointment.comment && <p><strong>הערה:</strong> דרישות של לקוחות</p>}
                   <button 
                     className="btn btn-danger" 
                     onClick={() => handleDeleteAppointment(appointment.id)}
@@ -148,7 +423,7 @@ const BusinessDashboard: React.FC = () => {
 
         {/* Pending Appointments */}
         <div className="card">
-          <h3>תורים ממתינים לאישור</h3>
+                     <h3 style={{ marginBottom: '32px' }}>תורים ממתינים לאישור</h3>
           {pendingAppointments.length === 0 ? (
             <p>אין תורים ממתינים לאישור</p>
           ) : (
@@ -165,8 +440,7 @@ const BusinessDashboard: React.FC = () => {
                   <p><strong>טלפון:</strong> {appointment.customerPhone}</p>
                   <p><strong>תאריך:</strong> {format(new Date(appointment.date), 'dd/MM/yyyy', { locale: he })}</p>
                   <p><strong>שעה:</strong> {appointment.time}</p>
-                  {appointment.comment && <p><strong>הערה:</strong> {appointment.comment}</p>}
-                  {appointment.rating && <p><strong>דירוג:</strong> {'★'.repeat(appointment.rating)}</p>}
+                  {appointment.comment && <p><strong>הערה:</strong> דרישות של לקוחות</p>}
                   <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
                     <button 
                       className="btn btn-success" 
@@ -189,38 +463,51 @@ const BusinessDashboard: React.FC = () => {
 
         {/* Services Management */}
         <div className="card">
-          <h3>ניהול שירותים</h3>
+                     <h3 style={{ marginBottom: '32px' }}>ניהול שירותים</h3>
           <div className="service-grid">
-            {mockBusiness.services.map((service) => (
-              <div key={service.id} className="service-card">
-                <img 
-                  src={service.image} 
-                  alt={service.name} 
-                  className="service-image"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.background = 'linear-gradient(45deg, #ff6b9d, #ff8fab)';
-                    target.style.display = 'flex';
-                    target.style.alignItems = 'center';
-                    target.style.justifyContent = 'center';
-                    target.style.color = 'white';
-                    target.style.fontSize = '24px';
-                    target.textContent = '💅';
-                  }}
-                />
-                <div className="service-content">
-                  <h4 className="service-title">{service.name}</h4>
-                  <p className="service-price">₪{service.price}</p>
-                  <p className="service-duration">משך הטיפול: {service.duration} דקות</p>
-                  <button 
-                    className="btn btn-secondary"
-                    style={{ width: '100%', marginTop: '16px' }}
-                    onClick={() => alert('בגרסה זו לא ניתן לערוך שירותים')}
-                  >
-                    ערוך שירות
-                  </button>
-                </div>
-              </div>
+                         {mockBusiness.services.map((service) => (
+                              <div 
+                 key={service.id} 
+                 className="service-card" 
+                 onClick={() => alert('בגרסה זו לא ניתן לערוך שירותים')} 
+                 style={{ 
+                   cursor: 'pointer',
+                   transition: 'all 0.3s ease',
+                   transform: 'scale(1)',
+                   boxShadow: '0 4px 15px rgba(255, 107, 157, 0.2)',
+                   border: '2px solid transparent',
+                   background: 'linear-gradient(135deg, #fff, #fff5f7)'
+                 }}
+                 onMouseEnter={(e) => {
+                   e.currentTarget.style.transform = 'scale(1.05)';
+                   e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 157, 0.4)';
+                   e.currentTarget.style.border = '2px solid #ff6b9d';
+                   e.currentTarget.style.background = 'linear-gradient(135deg, #fff5f7, #ffeef2)';
+                 }}
+                 onMouseLeave={(e) => {
+                   e.currentTarget.style.transform = 'scale(1)';
+                   e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 157, 0.2)';
+                   e.currentTarget.style.border = '2px solid transparent';
+                   e.currentTarget.style.background = 'linear-gradient(135deg, #fff, #fff5f7)';
+                 }}
+                 onMouseDown={(e) => {
+                   e.currentTarget.style.transform = 'scale(0.95)';
+                   e.currentTarget.style.boxShadow = '0 2px 10px rgba(255, 107, 157, 0.6)';
+                   e.currentTarget.style.background = 'linear-gradient(135deg, #ff6b9d, #ff8fab)';
+                   e.currentTarget.style.color = 'white';
+                 }}
+                 onMouseUp={(e) => {
+                   e.currentTarget.style.transform = 'scale(1.05)';
+                   e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 157, 0.4)';
+                   e.currentTarget.style.background = 'linear-gradient(135deg, #fff5f7, #ffeef2)';
+                   e.currentTarget.style.color = 'inherit';
+                 }}
+               >
+                                   <div className="service-content" style={{ padding: '16px' }}>
+                    <h4 className="service-title" style={{ fontSize: '14px', fontWeight: '600' }}>{service.name} - {service.duration} דק</h4>
+                    <p className="service-price" style={{ fontSize: '14px', fontWeight: '600' }}>₪{service.price}</p>
+                  </div>
+               </div>
             ))}
           </div>
         </div>

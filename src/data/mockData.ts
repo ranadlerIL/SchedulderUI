@@ -107,6 +107,57 @@ export const mockAppointments: Appointment[] = [
     time: '14:00',
     status: 'waiting',
     businessId: '1'
+  },
+  // Additional mock data for demonstration
+  {
+    id: '4',
+    customerName: 'רן אדלר',
+    customerPhone: '0523133310',
+    serviceId: '1',
+    serviceName: 'מניקור קלאסי',
+    date: '2024-01-20',
+    time: '15:30',
+    status: 'approved',
+    comment: 'תור ראשון, מאוד שמח!',
+    rating: 5,
+    businessId: '1'
+  },
+  {
+    id: '5',
+    customerName: 'רן אדלר',
+    customerPhone: '0523133310',
+    serviceId: '4',
+    serviceName: 'בניית ציפורניים',
+    date: '2024-01-25',
+    time: '12:00',
+    status: 'pending',
+    comment: 'רוצה ציפורניים ארוכות',
+    businessId: '1'
+  },
+  {
+    id: '6',
+    customerName: 'רן אדלר',
+    customerPhone: '0523133310',
+    serviceId: '5',
+    serviceName: 'עיצוב ציפורניים',
+    date: '2024-01-28',
+    time: '16:00',
+    status: 'waiting',
+    comment: 'עיצוב מיוחד ליום הולדת',
+    businessId: '1'
+  },
+  {
+    id: '7',
+    customerName: 'רן אדלר',
+    customerPhone: '0523133310',
+    serviceId: '3',
+    serviceName: 'מניקור + פדיקור',
+    date: '2024-02-01',
+    time: '10:00',
+    status: 'approved',
+    comment: 'חבילה מלאה',
+    rating: 4,
+    businessId: '1'
   }
 ];
 
@@ -115,5 +166,6 @@ export const mockAuthCodes = {
   '050-1111111': '123456',
   '050-2222222': '654321',
   '050-3333333': '111111',
+  '0523133310': '123456',
   'info@nails-beauty.co.il': '999999'
 };

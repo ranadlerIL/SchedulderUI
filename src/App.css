@@ -251,6 +251,31 @@ body {
   margin-top: 20px;
 }
 
+/* Custom scrollbar for time slots */
+.time-slots::-webkit-scrollbar {
+  width: 6px;
+}
+
+.time-slots::-webkit-scrollbar-track {
+  background: #fff5f7;
+  border-radius: 3px;
+}
+
+.time-slots::-webkit-scrollbar-thumb {
+  background: #ffb3c7;
+  border-radius: 3px;
+}
+
+.time-slots::-webkit-scrollbar-thumb:hover {
+  background: #ff6b9d;
+}
+
+/* Firefox scrollbar */
+.time-slots {
+  scrollbar-width: thin;
+  scrollbar-color: #ffb3c7 #fff5f7;
+}
+
 .time-slot {
   padding: 12px;
   border: 2px solid #e9ecef;
@@ -385,5 +410,36 @@ body {
   .nav-links {
     flex-direction: column;
     gap: 12px;
+    text-align: center;
   }
+  
+  .nav-links li {
+    text-align: center;
+  }
+  
+  .nav-links button {
+    text-align: center !important;
+    width: 100%;
+  }
+}
+
+/* Placeholder styling for form inputs */
+.form-control::placeholder {
+  color: #adb5bd;
+  opacity: 1;
+}
+
+.form-control::-webkit-input-placeholder {
+  color: #adb5bd;
+  opacity: 1;
+}
+
+.form-control::-moz-placeholder {
+  color: #adb5bd;
+  opacity: 1;
+}
+
+.form-control:-ms-input-placeholder {
+  color: #adb5bd;
+  opacity: 1;
 }

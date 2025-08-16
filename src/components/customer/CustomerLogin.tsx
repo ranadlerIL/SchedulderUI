@@ -20,7 +20,9 @@ const CustomerLogin: React.FC = () => {
     // Simulate sending WhatsApp verification code
     setShowVerification(true);
     setError('');
-    alert(`קוד אימות נשלח לווטסאפ: ${phone}\nקוד לדוגמה: ${mockAuthCodes[phone] || '123456'}`);
+    const defaultCode = '123456';
+    const codeToShow = mockAuthCodes[phone] || defaultCode;
+    alert(`קוד אימות נשלח לווטסאפ: ${phone}\nקוד לדוגמה: ${codeToShow}`);
   };
 
   const handleVerifyCode = (e: React.FormEvent) => {
@@ -30,7 +32,7 @@ const CustomerLogin: React.FC = () => {
       return;
     }
 
-    const expectedCode = mockAuthCodes[phone];
+    const expectedCode = mockAuthCodes[phone] || '123456'; // Default code for any phone number
     if (verificationCode === expectedCode) {
       // In a real app, this would set authentication state
       localStorage.setItem('customerPhone', phone);
@@ -75,6 +77,11 @@ const CustomerLogin: React.FC = () => {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="050-1234567"
                   required
+                  style={{
+                    textAlign: 'right',
+                    direction: 'rtl',
+                    color: '#495057'
+                  }}
                 />
               </div>
               
@@ -94,28 +101,24 @@ const CustomerLogin: React.FC = () => {
                   placeholder="123456"
                   maxLength={6}
                   required
+                  style={{
+                    textAlign: 'right',
+                    direction: 'rtl',
+                    color: '#495057'
+                  }}
                 />
                 <small style={{ color: '#6c757d', marginTop: '8px', display: 'block' }}>
                   קוד אימות נשלח לווטסאפ שלך
+                  <br />
+                  <span style={{ color: '#ff6b9d', fontWeight: '600' }}>
+                    קוד לדוגמה: {mockAuthCodes[phone] || '123456'}
+                  </span>
                 </small>
               </div>
               
-              <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
-                אימות והתחברות
-              </button>
-              
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
-                style={{ width: '100%', marginTop: '12px' }}
-                onClick={() => {
-                  setShowVerification(false);
-                  setVerificationCode('');
-                  setError('');
-                }}
-              >
-                חזור
-              </button>
+                             <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                 אימות והתחברות
+               </button>
             </form>
           )}
 
